@@ -39,7 +39,7 @@ class RepeatConfig {
   }
 }
 
-// Main event model
+// Main event models
 class Event {
   final String id; // Unique identifier
   String title;
