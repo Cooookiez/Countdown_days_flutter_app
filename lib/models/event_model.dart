@@ -117,33 +117,33 @@ class Event {
   }
 
   // Convert to JSON for storage
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'endDate': endDate.toIso8601String(),
-      'includeTime': includeTime,
-      'repeatConfig': repeatConfig?.toJson(),
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-    };
-  }
-
-  // Create from JSON for storage
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'],
       title: json['title'],
       description: json['description'],
       endDate: DateTime.parse(json['endDate']),
-      includeTime: json['includeTime'],
+      includeTime: json['includeTime'] == 1, // Convert integer to boolean
       repeatConfig: json['repeatConfig'] != null
           ? RepeatConfig.fromJson(json['repeatConfig'])
           : null,
     )
       ..createdAt = DateTime.parse(json['createdAt'])
       ..updatedAt = DateTime.parse(json['updatedAt']);
+  }
+
+  // Create to JSON for storage
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'endDate': endDate.toIso8601String(),
+      'includeTime': includeTime ? 1 : 0, // Convert boolean to integer
+      'repeatConfig': repeatConfig?.toJson(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
   }
 
 }
