@@ -102,16 +102,16 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   String _formatTimeRemaining(Duration duration) {
-    if (duration.isNegative) {
-      return 'Event has passed';
-    }
+    final days = duration.inDays;
+    final hours = duration.inHours % 24;
+    final minutes = duration.inMinutes % 60;
 
-    if (duration.inDays > 0) {
-      return '${duration.inDays} days remaining';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} hours remaining';
+    if (days != 0) {
+      return '${days > 0 ? "" : "-"}${days.abs()} days';
+    } else if (hours != 0) {
+      return '${hours > 0 ? "" : "-"}${hours.abs()} hours';
     } else {
-      return '${duration.inMinutes} minutes remaining';
+      return '${minutes > 0 ? "" : "-"}${minutes.abs()} minutes';
     }
   }
 
