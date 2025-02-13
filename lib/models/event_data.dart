@@ -2,11 +2,45 @@ import 'package:flutter/foundation.dart';
 import '../services/database_service.dart';
 import 'event_model.dart';
 
+enum EventSortType {
+  dateAscending,
+  dateDescending,
+  titleAscending,
+  titleDescending,
+  createdAtNewest,
+  createdAtOldest
+}
+
 class EventData extends ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
   List<Event> _events = [];
+  EventSortType _currentSort = EventSortType.dateAscending;
 
+  // Getters
   List<Event> get events => _events;
+  EventSortType get currentSort => _currentSort;
+
+  // Sorted events getter
+  List<Event> get sortedEvents {
+    final sorted = List<Event>.from(_events);
+
+    switch (_currentSort) {
+      case EventSortType.dateAscending:
+        sorted.sort((a, b) => a.endDate.compareTo(b.endDate));
+      case EventSortType.dateDescending:
+        sorted.sort((a, b) => b.endDate.compareTo(a.endDate));
+      case EventSortType.titleAscending:
+        sorted.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      case EventSortType.titleDescending:
+        sorted.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+      case EventSortType.createdAtNewest:
+        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      case EventSortType.createdAtOldest:
+        sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+
+    return sorted;
+  }
 
   // Load all events from database
   Future<void> loadEvents() async {
@@ -45,5 +79,11 @@ class EventData extends ChangeNotifier {
   // Get single event
   Future<Event?> getEvent(String id) async {
     return await _db.getEvent(id);
+  }
+
+  // Change sort type
+  void setSortType(EventSortType type) {
+    _currentSort = type;
+    notifyListeners();
   }
 }

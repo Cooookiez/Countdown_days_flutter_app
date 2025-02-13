@@ -1,10 +1,8 @@
-
-import 'package:countdown_days_flutter_app/screens/event_form_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../models/event_data.dart';
 import '../models/event_model.dart';
+import 'event_form_screen.dart';
 
 class EventListScreen extends StatefulWidget {
   static const String id = 'EventListScreen';
@@ -12,7 +10,6 @@ class EventListScreen extends StatefulWidget {
 
   @override
   State<EventListScreen> createState() => _EventListScreenState();
-
 }
 
 class _EventListScreenState extends State<EventListScreen> {
@@ -33,7 +30,38 @@ class _EventListScreenState extends State<EventListScreen> {
       appBar: AppBar(
         title: const Text('My Events'),
         actions: [
-          // TODO
+          PopupMenuButton<EventSortType>(
+            icon: const Icon(Icons.sort),
+            onSelected: (EventSortType sortType) {
+              context.read<EventData>().setSortType(sortType);
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: EventSortType.dateAscending,
+                child: Text('Date (Earliest first)'),
+              ),
+              const PopupMenuItem(
+                value: EventSortType.dateDescending,
+                child: Text('Date (Latest first)'),
+              ),
+              const PopupMenuItem(
+                value: EventSortType.titleAscending,
+                child: Text('Title (A to Z)'),
+              ),
+              const PopupMenuItem(
+                value: EventSortType.titleDescending,
+                child: Text('Title (Z to A)'),
+              ),
+              const PopupMenuItem(
+                value: EventSortType.createdAtNewest,
+                child: Text('Recently added'),
+              ),
+              const PopupMenuItem(
+                value: EventSortType.createdAtOldest,
+                child: Text('Oldest added'),
+              ),
+            ],
+          ),
         ],
       ),
       body: Consumer<EventData>(
@@ -45,9 +73,9 @@ class _EventListScreenState extends State<EventListScreen> {
           }
 
           return ListView.builder(
-            itemCount: eventData.events.length,
+            itemCount: eventData.sortedEvents.length,
             itemBuilder: (context, index) {
-              final event = eventData.events[index];
+              final event = eventData.sortedEvents[index];
               return _buildEventCard(event);
             },
           );
@@ -56,9 +84,9 @@ class _EventListScreenState extends State<EventListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(
-            context,
-            EventFormScreen.id,
-            arguments: null
+              context,
+              EventFormScreen.id,
+              arguments: null
           );
         },
         child: const Icon(Icons.add),
