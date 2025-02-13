@@ -20,6 +20,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
   TimeOfDay? _selectedTime;
   bool _includeTime = false;
   Event? eventToEdit;
+  bool _isRepeating = false;
+  int _repeatInterval = 1;
+  FrequencyUnit _repeatUnit = FrequencyUnit.days;
 
   @override
   void initState() {
@@ -134,6 +137,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                   onTap: _selectDate,
                 ),
               ),
+
               const SizedBox(height: 8),
 
               // Time Selection
@@ -165,6 +169,72 @@ class _EventFormScreenState extends State<EventFormScreen> {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 8),
+
+              Card(
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Repeat Event'),
+                      value: _isRepeating,
+                      onChanged: (value) {
+                        setState(() {
+                          _isRepeating = value;
+                        });
+                      },
+                    ),
+                    if (_isRepeating) ...[
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                decoration: const InputDecoration(
+                                  labelText: 'Repeat every',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.number,
+                                initialValue: _repeatInterval.toString(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _repeatInterval = int.tryParse(value) ?? 1;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: DropdownButtonFormField<FrequencyUnit>(
+                                decoration: const InputDecoration(
+                                  labelText: 'Unit',
+                                  border: OutlineInputBorder(),
+                                ),
+                                value: _repeatUnit,
+                                items: FrequencyUnit.values.map((unit) {
+                                  return DropdownMenuItem(
+                                    value: unit,
+                                    child: Text(unit.toString().split('.').last),
+                                  );
+                                }).toList(),
+                                onChanged: (FrequencyUnit? value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      _repeatUnit = value;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 32),
 
               // Save Button
@@ -273,11 +343,22 @@ class _EventFormScreenState extends State<EventFormScreen> {
     );
 
     final event = Event(
-      id: eventToEdit?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: eventToEdit?.id ?? DateTime
+          .now()
+          .millisecondsSinceEpoch
+          .toString(),
       title: _titleController.text,
-      description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+      description: _descriptionController.text.isEmpty
+          ? null
+          : _descriptionController.text,
       endDate: finalDateTime,
       includeTime: _includeTime,
+      repeatConfig: _isRepeating
+          ? RepeatConfig(
+        interval: _repeatInterval,
+        unit: _repeatUnit,
+      )
+          : null,
     );
 
     if (eventToEdit == null) {
