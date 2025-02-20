@@ -21,9 +21,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
   bool _includeTime = false;
   Event? eventToEdit;
   bool _isRepeating = false;
-  bool _hasNotifications = false;
   int _repeatInterval = 1;
   FrequencyUnit _repeatUnit = FrequencyUnit.days;
+  bool _allowNotifications = false;
+  List<NotificationConfig> _notifications = List.empty();
 
   @override
   void initState() {
@@ -33,6 +34,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
     _selectedDate = DateTime.now();
     _selectedTime = null;
     _includeTime = false;
+    _allowNotifications = false;
   }
 
   @override
@@ -45,10 +47,23 @@ class _EventFormScreenState extends State<EventFormScreen> {
       setState(() {
         _titleController.text = eventToEdit!.title;
         _descriptionController.text = eventToEdit?.description ?? '';
+
+        _isRepeating = eventToEdit!.isRepeating;
+        if (_isRepeating) {
+          _repeatInterval = eventToEdit!.repeatConfig!.interval;
+          _repeatUnit = eventToEdit!.repeatConfig!.unit;
+        }
+
         _selectedDate = eventToEdit!.endDate;
+
         if (eventToEdit!.includeTime) {
           _selectedTime = TimeOfDay.fromDateTime(eventToEdit!.endDate);
           _includeTime = true;
+        }
+
+        _allowNotifications = eventToEdit!.allowNotifications;
+        if (_allowNotifications) {
+          _notifications = eventToEdit!.notifications;
         }
       });
     }
@@ -243,14 +258,14 @@ class _EventFormScreenState extends State<EventFormScreen> {
                   children: [
                     SwitchListTile(
                       title: const Text('Enable notifications'),
-                      value: _hasNotifications,
+                      value: _allowNotifications,
                       onChanged: (value) {
                         setState(() {
-                          _hasNotifications = value;
+                          _allowNotifications = value;
                         });
                       },
                     ),
-                    if (_hasNotifications) ...[
+                    if (_allowNotifications) ...[
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -407,6 +422,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
               ElevatedButton(
                 onPressed: _saveEvent,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -414,7 +430,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 ),
                 child: Text(
                   eventToEdit == null ? 'Add Event' : 'Save Changes',
-                  style: const TextStyle(fontSize: 16),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -519,12 +538,15 @@ class _EventFormScreenState extends State<EventFormScreen> {
           : _descriptionController.text,
       endDate: finalDateTime,
       includeTime: _includeTime,
+      isRepeating: _isRepeating,
       repeatConfig: _isRepeating
           ? RepeatConfig(
         interval: _repeatInterval,
         unit: _repeatUnit,
       )
           : null,
+      allowNotifications: _allowNotifications,
+      notifications: _notifications
     );
 
     if (eventToEdit == null) {

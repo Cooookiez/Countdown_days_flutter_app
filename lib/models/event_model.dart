@@ -16,6 +16,7 @@ class Event {
   String? description;
   DateTime endDate;
   bool includeTime;
+  bool isRepeating;
   RepeatConfig? repeatConfig; // Optional repeat configuration
   bool allowNotifications;
   List<NotificationConfig> notifications;
@@ -28,6 +29,7 @@ class Event {
     this.description,
     required this.endDate,
     this.includeTime = false,
+    this.isRepeating = false,
     this.repeatConfig,
     this.allowNotifications = false,
     List<NotificationConfig>? notifications,
