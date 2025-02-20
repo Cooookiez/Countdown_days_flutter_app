@@ -21,6 +21,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
   bool _includeTime = false;
   Event? eventToEdit;
   bool _isRepeating = false;
+  bool _hasNotifications = false;
   int _repeatInterval = 1;
   FrequencyUnit _repeatUnit = FrequencyUnit.days;
 
@@ -234,6 +235,171 @@ class _EventFormScreenState extends State<EventFormScreen> {
                   ],
                 ),
               ),
+
+              const SizedBox(height: 8),
+
+              Card(
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Enable notifications'),
+                      value: _hasNotifications,
+                      onChanged: (value) {
+                        setState(() {
+                          _hasNotifications = value;
+                        });
+                      },
+                    ),
+                    if (_hasNotifications) ...[
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+
+                            Card(
+                              child: ListTile(
+                                title: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                        size: 24,
+                                      ),
+                                      onPressed: () {
+
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextFormField(
+                                        keyboardType: TextInputType.number,
+                                        initialValue: _repeatInterval.toString(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _repeatInterval = int.tryParse(value) ?? 1;
+                                          });
+                                        },
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                        child: DropdownButtonFormField<FrequencyUnit>(
+                                          items: FrequencyUnit.values.map((unit) {
+                                            return DropdownMenuItem(
+                                              value: unit,
+                                              child: Text(unit.toString().split('.').last),
+                                            );
+                                          }).toList(),
+                                          onChanged: (FrequencyUnit? value) {
+
+                                          },
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                          ),
+                                        )
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Before',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            Card(
+                              child: ListTile(
+                                title: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                        size: 24,
+                                      ),
+                                      onPressed: () {
+
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextFormField(
+                                        keyboardType: TextInputType.number,
+                                        initialValue: _repeatInterval.toString(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _repeatInterval = int.tryParse(value) ?? 1;
+                                          });
+                                        },
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                        child: DropdownButtonFormField<FrequencyUnit>(
+                                          items: FrequencyUnit.values.map((unit) {
+                                            return DropdownMenuItem(
+                                              value: unit,
+                                              child: Text(unit.toString().split('.').last),
+                                            );
+                                          }).toList(),
+                                          onChanged: (FrequencyUnit? value) {
+
+                                          },
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                          ),
+                                        )
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Before',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 0,
+                                horizontal: 4,
+                              ),
+                              child: FilledButton.tonal(
+                                onPressed: () {  },
+                                style: ButtonStyle(
+                                  minimumSize: WidgetStateProperty.all(const Size.fromHeight(48)),
+                                  shape: WidgetStateProperty.all(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                child: Text('Add notification'),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
 
               const SizedBox(height: 32),
 
