@@ -32,6 +32,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
       isEnabled: true,
     )
   ];
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -47,33 +48,71 @@ class _EventFormScreenState extends State<EventFormScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Get event from route arguments if it exists
+    _loadEventFromArguments();
+  }
+
+  // Load event from route arguments
+  Future<void> _loadEventFromArguments() async {
     final args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is Event) {
-      eventToEdit = args;
-      setState(() {
-        _titleController.text = eventToEdit!.title;
-        _descriptionController.text = eventToEdit?.description ?? '';
 
-        _isRepeating = eventToEdit!.isRepeating;
-        if (_isRepeating) {
-          _repeatInterval = eventToEdit!.repeatConfig!.interval;
-          _repeatUnit = eventToEdit!.repeatConfig!.unit;
-        }
+    if (args == null) return;
 
-        _selectedDate = eventToEdit!.endDate;
-
-        if (eventToEdit!.includeTime) {
-          _selectedTime = TimeOfDay.fromDateTime(eventToEdit!.endDate);
-          _includeTime = true;
-        }
-
-        _allowNotifications = eventToEdit!.allowNotifications;
-        if (_allowNotifications) {
-          _notifications = eventToEdit!.notifications;
-        }
-      });
+    // If the argument is an Event, use it directly
+    if (args is Event) {
+      _setupEventForEditing(args);
+      return;
     }
+
+    // If the argument is a String (event ID), load the event
+    if (args is String) {
+      setState(() => _isLoading = true);
+      try {
+        final eventData = Provider.of<EventData>(context, listen: false);
+        final event = await eventData.getEvent(args);
+
+        if (event != null && mounted) {
+          _setupEventForEditing(event);
+        }
+      } catch (e) {
+        print('Error loading event: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load event details')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    }
+  }
+
+  // Set up form fields for editing an event
+  void _setupEventForEditing(Event event) {
+    eventToEdit = event;
+    setState(() {
+      _titleController.text = eventToEdit!.title;
+      _descriptionController.text = eventToEdit?.description ?? '';
+
+      _isRepeating = eventToEdit!.isRepeating;
+      if (_isRepeating && eventToEdit!.repeatConfig != null) {
+        _repeatInterval = eventToEdit!.repeatConfig!.interval;
+        _repeatUnit = eventToEdit!.repeatConfig!.unit;
+      }
+
+      _selectedDate = eventToEdit!.endDate;
+
+      if (eventToEdit!.includeTime) {
+        _selectedTime = TimeOfDay.fromDateTime(eventToEdit!.endDate);
+        _includeTime = true;
+      }
+
+      _allowNotifications = eventToEdit!.allowNotifications;
+      if (_allowNotifications && eventToEdit!.notifications.isNotEmpty) {
+        _notifications = eventToEdit!.notifications;
+      }
+    });
   }
 
   @override
@@ -105,8 +144,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 ),
               ],
             ),
-          ) ??
-              false;
+          ) ?? false;
         }
         return true;
       },
@@ -114,7 +152,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
         appBar: AppBar(
           title: Text(eventToEdit == null ? 'Add Event' : 'Edit Event'),
         ),
-        body: Form(
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(16),
@@ -307,7 +347,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                                     ),
                                   ),
                                 ),
-                                child: Text('Add notification'),
+                                child: const Text('Add notification'),
                               ),
                             )
                           ],
@@ -511,25 +551,25 @@ class _EventFormScreenState extends State<EventFormScreen> {
     );
 
     final event = Event(
-      id: eventToEdit?.id ?? DateTime
-          .now()
-          .millisecondsSinceEpoch
-          .toString(),
-      title: _titleController.text,
-      description: _descriptionController.text.isEmpty
-          ? null
-          : _descriptionController.text,
-      endDate: finalDateTime,
-      includeTime: _includeTime,
-      isRepeating: _isRepeating,
-      repeatConfig: _isRepeating
-          ? RepeatConfig(
-        interval: _repeatInterval,
-        unit: _repeatUnit,
-      )
-          : null,
-      allowNotifications: _allowNotifications,
-      notifications: _notifications
+        id: eventToEdit?.id ?? DateTime
+            .now()
+            .millisecondsSinceEpoch
+            .toString(),
+        title: _titleController.text,
+        description: _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text,
+        endDate: finalDateTime,
+        includeTime: _includeTime,
+        isRepeating: _isRepeating,
+        repeatConfig: _isRepeating
+            ? RepeatConfig(
+          interval: _repeatInterval,
+          unit: _repeatUnit,
+        )
+            : null,
+        allowNotifications: _allowNotifications,
+        notifications: _allowNotifications ? _notifications : []
     );
 
     if (eventToEdit == null) {

@@ -6,16 +6,51 @@ import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'screens/event_form_screen.dart';
+import 'services/notification_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize database
   final db = await DatabaseService.instance.database;
-  print("Database initialized: ${await db.getVersion()}"); // Debug print
+
+  // Initialize notifications
+  await NotificationController.initializeLocalNotifications();
+  await NotificationController.initializeIsolateReceivePort();
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Start listening for notification actions
+    NotificationController.startListeningNotificationEvents();
+
+    // Check if app was opened from a notification
+    _checkForInitialNotificationAction();
+  }
+
+  // Check for initial notification action
+  Future<void> _checkForInitialNotificationAction() async {
+    final initialAction = NotificationController.initialAction;
+    if (initialAction != null) {
+      // Small delay to ensure the app is fully initialized
+      Future.delayed(Duration(milliseconds: 500), () {
+        NotificationController.onActionReceivedImplementationMethod(initialAction);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
