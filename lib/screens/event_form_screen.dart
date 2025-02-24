@@ -22,9 +22,16 @@ class _EventFormScreenState extends State<EventFormScreen> {
   Event? eventToEdit;
   bool _isRepeating = false;
   int _repeatInterval = 1;
-  FrequencyUnit _repeatUnit = FrequencyUnit.days;
+  FrequencyUnit _repeatUnit = FrequencyUnit.months;
   bool _allowNotifications = false;
-  List<NotificationConfig> _notifications = List.empty();
+  List<NotificationConfig> _notifications = [
+    NotificationConfig(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      amount: 1,
+      unit: FrequencyUnit.hours,
+      isEnabled: true,
+    )
+  ];
 
   @override
   void initState() {
