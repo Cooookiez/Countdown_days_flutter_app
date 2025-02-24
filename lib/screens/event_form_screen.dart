@@ -270,121 +270,8 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
-
-                            Card(
-                              child: ListTile(
-                                title: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.close,
-                                        color: Colors.red,
-                                        size: 24,
-                                      ),
-                                      onPressed: () {
-
-                                      },
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextFormField(
-                                        keyboardType: TextInputType.number,
-                                        initialValue: _repeatInterval.toString(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _repeatInterval = int.tryParse(value) ?? 1;
-                                          });
-                                        },
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                        child: DropdownButtonFormField<FrequencyUnit>(
-                                          items: FrequencyUnit.values.map((unit) {
-                                            return DropdownMenuItem(
-                                              value: unit,
-                                              child: Text(unit.toString().split('.').last),
-                                            );
-                                          }).toList(),
-                                          onChanged: (FrequencyUnit? value) {
-
-                                          },
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                          ),
-                                        )
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Before',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            Card(
-                              child: ListTile(
-                                title: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.close,
-                                        color: Colors.red,
-                                        size: 24,
-                                      ),
-                                      onPressed: () {
-
-                                      },
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextFormField(
-                                        keyboardType: TextInputType.number,
-                                        initialValue: _repeatInterval.toString(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _repeatInterval = int.tryParse(value) ?? 1;
-                                          });
-                                        },
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                        child: DropdownButtonFormField<FrequencyUnit>(
-                                          items: FrequencyUnit.values.map((unit) {
-                                            return DropdownMenuItem(
-                                              value: unit,
-                                              child: Text(unit.toString().split('.').last),
-                                            );
-                                          }).toList(),
-                                          onChanged: (FrequencyUnit? value) {
-
-                                          },
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                          ),
-                                        )
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Before',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            ..._notifications.asMap().entries.map(
+                                  (entry) => _buildNotificationCard(entry.value, entry.key),
                             ),
 
                             const SizedBox(height: 8),
@@ -395,7 +282,16 @@ class _EventFormScreenState extends State<EventFormScreen> {
                                 horizontal: 4,
                               ),
                               child: FilledButton.tonal(
-                                onPressed: () {  },
+                                onPressed: () {
+                                  setState(() {
+                                    _notifications = List.from(_notifications)
+                                      ..add(NotificationConfig(
+                                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                        amount: 1,
+                                        unit: FrequencyUnit.hours,
+                                      ));
+                                  });
+                                },
                                 style: ButtonStyle(
                                   minimumSize: WidgetStateProperty.all(const Size.fromHeight(48)),
                                   shape: WidgetStateProperty.all(
@@ -438,6 +334,86 @@ class _EventFormScreenState extends State<EventFormScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationCard(NotificationConfig notification, int index) {
+    return Card(
+      child: ListTile(
+        title: Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.close,
+                color: Colors.red,
+                size: 24,
+              ),
+              onPressed: () {
+                setState(() {
+                  _notifications = List.from(_notifications)..removeAt(index);
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                keyboardType: TextInputType.number,
+                initialValue: notification.amount.toString(),
+                onChanged: (value) {
+                  final newAmount = int.tryParse(value) ?? 1;
+                  setState(() {
+                    _notifications = List.from(_notifications)
+                      ..[index] = NotificationConfig(
+                        id: notification.id,
+                        amount: newAmount,
+                        unit: notification.unit,
+                        isEnabled: notification.isEnabled,
+                      );
+                  });
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<FrequencyUnit>(
+                value: notification.unit,
+                items: FrequencyUnit.values.map((unit) {
+                  return DropdownMenuItem(
+                    value: unit,
+                    child: Text(unit.toString().split('.').last),
+                  );
+                }).toList(),
+                onChanged: (FrequencyUnit? value) {
+                  if (value != null) {
+                    setState(() {
+                      _notifications = List.from(_notifications)
+                        ..[index] = NotificationConfig(
+                          id: notification.id,
+                          amount: notification.amount,
+                          unit: value,
+                          isEnabled: notification.isEnabled,
+                        );
+                    });
+                  }
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Before',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );
