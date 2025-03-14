@@ -1,4 +1,4 @@
-name: countdown_days_flutter_app
+name: Countdown Master
 description: "A event management application that helps users organize their daily activities and track days to given date."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
