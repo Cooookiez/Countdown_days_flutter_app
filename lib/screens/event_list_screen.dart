@@ -168,54 +168,44 @@ class _EventListScreenState extends State<EventListScreen> {
   Widget _buildEventCard(Event event) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        title: Text(
-          event.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+      child: InkWell( // Add InkWell to make the entire card clickable
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            EventFormScreen.id,
+            arguments: event,
+          );
+        },
+        child: ListTile(
+          title: Text(
+            event.title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (event.description != null)
-              Text(event.description!),
-            const SizedBox(height: 4),
-            Text(
-              _formatDateTime(event.endDate, event.includeTime),
-              style: const TextStyle(color: Colors.grey),
-            ),
-            Text(
-              _formatTimeRemaining(event.timeUntil()),
-              style: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w500,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (event.description != null)
+                Text(event.description!),
+              const SizedBox(height: 4),
+              Text(
+                _formatDateTime(event.endDate, event.includeTime),
+                style: const TextStyle(color: Colors.grey),
               ),
-            ),
-          ],
-        ),
-        trailing: PopupMenuButton(
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Text('Edit'),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text('Delete'),
-            ),
-          ],
-          onSelected: (value) {
-            if (value == 'edit') {
-              Navigator.pushNamed(
-                context,
-                EventFormScreen.id,
-                arguments: event,
-              );
-            } else if (value == 'delete') {
-              _confirmDelete(event);
-            }
-          },
+              Text(
+                _formatTimeRemaining(event.timeUntil()),
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _confirmDelete(event),
+          ),
         ),
       ),
     );
