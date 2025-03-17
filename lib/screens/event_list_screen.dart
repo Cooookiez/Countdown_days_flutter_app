@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/event_data.dart';
@@ -13,6 +15,8 @@ class EventListScreen extends StatefulWidget {
 }
 
 class _EventListScreenState extends State<EventListScreen> {
+  Timer? _countdownTimer;
+
   @override
   void initState() {
     super.initState();
@@ -22,6 +26,26 @@ class _EventListScreenState extends State<EventListScreen> {
       print("Loading events in EventListScreen"); // Debug print
       context.read<EventData>().loadEvents();
     });
+
+    // Start the countdown timer that updates every second
+    _startCountdownTimer();
+  }
+
+  void _startCountdownTimer() {
+    // Update every minute to refresh countdown displays
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          // This will rebuild the UI with updated countdown values
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   @override
