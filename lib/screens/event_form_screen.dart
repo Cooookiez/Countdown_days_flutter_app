@@ -40,7 +40,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
     _selectedDate = DateTime.now();
-    _selectedTime = null;
+    _selectedTime = TimeOfDay.now();
     _includeTime = false;
     _allowNotifications = false;
   }
@@ -49,6 +49,33 @@ class _EventFormScreenState extends State<EventFormScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadEventFromArguments();
+  }
+
+  @override
+  void didUpdateWidget(EventFormScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // This ensures selected time isn't reset by parent widget updates
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_includeTime && mounted) {
+        // Ensure time is preserved after widget updates
+        setState(() {
+          // Only set state if needed to avoid infinite loops
+          final currentTimeOfDay = TimeOfDay(
+              hour: _selectedDate.hour,
+              minute: _selectedDate.minute
+          );
+          if (_selectedTime != currentTimeOfDay) {
+            _selectedDate = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime!.hour,
+              _selectedTime!.minute,
+            );
+          }
+        });
+      }
+    });
   }
 
   // Load event from route arguments
@@ -92,25 +119,28 @@ class _EventFormScreenState extends State<EventFormScreen> {
   void _setupEventForEditing(Event event) {
     eventToEdit = event;
     setState(() {
-      _titleController.text = eventToEdit!.title;
-      _descriptionController.text = eventToEdit?.description ?? '';
+      _titleController.text = event.title;
+      _descriptionController.text = event.description ?? '';
+      _selectedDate = event.endDate;
 
-      _isRepeating = eventToEdit!.isRepeating;
+      // Properly initialize the time if it should be included
+      _includeTime = event.includeTime;
+      if (_includeTime) {
+        _selectedTime = TimeOfDay(
+            hour: event.endDate.hour,
+            minute: event.endDate.minute
+        );
+      }
+
+      _isRepeating = event.isRepeating;
       if (_isRepeating && eventToEdit!.repeatConfig != null) {
         _repeatInterval = eventToEdit!.repeatConfig!.interval;
         _repeatUnit = eventToEdit!.repeatConfig!.unit;
       }
 
-      _selectedDate = eventToEdit!.endDate;
-
-      if (eventToEdit!.includeTime) {
-        _selectedTime = TimeOfDay.fromDateTime(eventToEdit!.endDate);
-        _includeTime = true;
-      }
-
-      _allowNotifications = eventToEdit!.allowNotifications;
-      if (_allowNotifications && eventToEdit!.notifications.isNotEmpty) {
-        _notifications = eventToEdit!.notifications;
+      _allowNotifications = event.allowNotifications;
+      if (_allowNotifications && event.notifications.isNotEmpty) {
+        _notifications = List<NotificationConfig>.from(event.notifications);
       }
     });
   }
@@ -509,22 +539,29 @@ class _EventFormScreenState extends State<EventFormScreen> {
   }
 
   Future<void> _selectTime() async {
+    // Cache current values
+    final currentTime = _selectedTime ?? TimeOfDay.now();
+
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
+      initialTime: currentTime,
     );
 
     if (picked != null && mounted) {
-      setState(() {
-        _selectedTime = picked;
-        // Update the date to include the new time
-        _selectedDate = DateTime(
-          _selectedDate.year,
-          _selectedDate.month,
-          _selectedDate.day,
-          picked.hour,
-          picked.minute,
-        );
+      // Use a closure to ensure the state update happens in the right order
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedTime = picked;
+            _selectedDate = DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              picked.hour,
+              picked.minute,
+            );
+          });
+        }
       });
     }
   }
