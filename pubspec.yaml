@@ -2,7 +2,7 @@ name: countdown_days_flutter_app
 description: "A event management application that helps users organize their daily activities and track days to given date."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: ^3.6.0
