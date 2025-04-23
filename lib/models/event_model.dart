@@ -119,9 +119,9 @@ class Event {
       description: json['description'],
       endDate: DateTime.parse(json['endDate']),
       includeTime: json['includeTime'] == 1, // Convert integer to boolean
-      repeatConfig: json['repeatConfig'] != null
-          ? RepeatConfig.fromJson(json['repeatConfig'])
-          : null,
+      isRepeating: json['repeatConfigId'] != null, // Set based on repeatConfigId
+      repeatConfig: null, // This will be set separately in getEvent
+      allowNotifications: json['allowNotifications'] == 1,
     )
       ..createdAt = DateTime.parse(json['createdAt'])
       ..updatedAt = DateTime.parse(json['updatedAt']);
