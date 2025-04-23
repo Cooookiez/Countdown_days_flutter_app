@@ -21,9 +21,7 @@ class _EventListScreenState extends State<EventListScreen> {
   void initState() {
     super.initState();
     // Load events when screen opens
-    print("EventListScreen initialized"); // Debug print
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print("Loading events in EventListScreen"); // Debug print
       context.read<EventData>().loadEvents();
     });
 
@@ -139,6 +137,32 @@ class _EventListScreenState extends State<EventListScreen> {
     }
   }
 
+  // Helper method to format repeat interval for display
+  String _formatRepeatInterval(RepeatConfig config) {
+    String unitStr = '';
+    switch (config.unit) {
+      case FrequencyUnit.days:
+        unitStr = config.interval == 1 ? 'day' : 'days';
+        break;
+      case FrequencyUnit.weeks:
+        unitStr = config.interval == 1 ? 'week' : 'weeks';
+        break;
+      case FrequencyUnit.months:
+        unitStr = config.interval == 1 ? 'month' : 'months';
+        break;
+      case FrequencyUnit.years:
+        unitStr = config.interval == 1 ? 'year' : 'years';
+        break;
+      case FrequencyUnit.hours:
+        unitStr = config.interval == 1 ? 'hour' : 'hours';
+        break;
+      case FrequencyUnit.minutes:
+        unitStr = config.interval == 1 ? 'minute' : 'minutes';
+        break;
+    }
+    return 'Every ${config.interval} $unitStr';
+  }
+
   Future<void> _confirmDelete(Event event) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -166,6 +190,8 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   Widget _buildEventCard(Event event) {
+    final bool isRepeating = event.isRepeating && event.repeatConfig != null;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
@@ -185,12 +211,27 @@ class _EventListScreenState extends State<EventListScreen> {
               _formatDateTime(event.endDate, event.includeTime),
               style: const TextStyle(color: Colors.grey),
             ),
-            Text(
-              _formatTimeRemaining(event.timeUntil()),
-              style: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              children: [
+                Text(
+                  _formatTimeRemaining(event.timeUntil()),
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (isRepeating) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatRepeatInterval(event.repeatConfig!),
+                    style: const TextStyle(
+                      color: Colors.indigo,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
