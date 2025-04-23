@@ -113,4 +113,47 @@ class EventData extends ChangeNotifier {
     _currentSort = type;
     notifyListeners();
   }
+
+  Future<void> updateRepeatingEvents() async {
+    final now = DateTime.now();
+    bool anyUpdated = false;
+
+    // Filter for repeating events that have passed
+    final expiredEvents = _events.where((event) =>
+    event.isRepeating &&
+        event.repeatConfig != null &&
+        event.endDate.isBefore(now)
+    ).toList();
+
+    for (final event in expiredEvents) {
+      // Get the next occurrence using the improved algorithm
+      final nextDate = event.getNextOccurrence();
+
+      print('Updating repeating event "${event.title}" from ${event.endDate} to $nextDate');
+
+      // Create updated event with new end date
+      final updatedEvent = Event(
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        endDate: nextDate,
+        includeTime: event.includeTime,
+        isRepeating: event.isRepeating,
+        repeatConfig: event.repeatConfig,
+        allowNotifications: event.allowNotifications,
+        notifications: event.notifications,
+      )
+        ..createdAt = event.createdAt
+        ..updatedAt = DateTime.now();
+
+      // Update in database and reschedule notifications
+      await updateEvent(updatedEvent);
+      anyUpdated = true;
+        }
+
+    if (anyUpdated) {
+      // Reload events after updates
+      await loadEvents();
+    }
+  }
 }

@@ -44,71 +44,72 @@ class Event {
   }
 
   // Get the next occurrence of the event based on repeat configuration
-  DateTime? getNextOccurrence() {
-    if (repeatConfig == null || !repeatConfig!.isValid) {
-      return null;
+  DateTime getNextOccurrence() {
+    if (!isRepeating || repeatConfig == null || !repeatConfig!.isValid) {
+      return endDate; // Return current date if not repeating
     }
 
     final now = DateTime.now();
+
+    // If the event is still in the future, just return its date
     if (endDate.isAfter(now)) {
       return endDate;
     }
 
-    switch (repeatConfig!.unit) {
-      case FrequencyUnit.days:
-        return DateTime(
-          now.year,
-          now.month,
-          now.day,
-          endDate.hour,
-          endDate.minute,
-        ).add(Duration(days: repeatConfig!.interval));
+    // Calculate how many repetition units have passed since the event date
+    int repetitions = 0;
+    DateTime nextDate = endDate;
 
-      case FrequencyUnit.weeks:
-        return DateTime(
-          now.year,
-          now.month,
-          now.day,
-          endDate.hour,
-          endDate.minute,
-        ).add(Duration(days: 7 * repeatConfig!.interval));
+    while (nextDate.isBefore(now)) {
+      repetitions++;
 
-      case FrequencyUnit.months:
-        return DateTime(
-          now.year,
-          now.month + repeatConfig!.interval,
-          now.day,
-          endDate.hour,
-          endDate.minute,
-        );
+      switch (repeatConfig!.unit) {
+        case FrequencyUnit.minutes:
+          nextDate = endDate.add(Duration(minutes: repeatConfig!.interval * repetitions));
+          break;
+        case FrequencyUnit.hours:
+          nextDate = endDate.add(Duration(hours: repeatConfig!.interval * repetitions));
+          break;
+        case FrequencyUnit.days:
+          nextDate = endDate.add(Duration(days: repeatConfig!.interval * repetitions));
+          break;
+        case FrequencyUnit.weeks:
+          nextDate = endDate.add(Duration(days: 7 * repeatConfig!.interval * repetitions));
+          break;
+        case FrequencyUnit.months:
+        // Handle month addition correctly
+          int monthsToAdd = repeatConfig!.interval * repetitions;
+          int year = endDate.year + (endDate.month + monthsToAdd - 1) ~/ 12;
+          int month = (endDate.month + monthsToAdd - 1) % 12 + 1;
 
-      case FrequencyUnit.years:
-        return DateTime(
-          now.year + repeatConfig!.interval,
-          endDate.month,
-          endDate.day,
-          endDate.hour,
-          endDate.minute,
-        );
+          // Handle potential day-of-month issues (e.g., Jan 31 -> Feb 28)
+          int day = endDate.day;
+          int daysInMonth = DateTime(year, month + 1, 0).day;
+          if (day > daysInMonth) {
+            day = daysInMonth;
+          }
 
-      case FrequencyUnit.minutes:
-        return DateTime(
-          now.year,
-          now.month + repeatConfig!.interval,
-          now.day,
-          now.hour,
-          endDate.minute,
-        );
-
-      case FrequencyUnit.hours:
-        return DateTime(
-          now.year,
-          now.month + repeatConfig!.interval,
-          now.day,
-          endDate.hour,
-          now.minute,
-        );
+          nextDate = DateTime(
+            year,
+            month,
+            day,
+            endDate.hour,
+            endDate.minute,
+          );
+          break;
+        case FrequencyUnit.years:
+          nextDate = DateTime(
+            endDate.year + (repeatConfig!.interval * repetitions),
+            endDate.month,
+            endDate.day,
+            endDate.hour,
+            endDate.minute,
+          );
+          break;
+      }
     }
+
+    return nextDate;
   }
 
   // Convert to JSON for storage

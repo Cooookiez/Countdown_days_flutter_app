@@ -1,5 +1,6 @@
 import 'package:countdown_days_flutter_app/models/event_data.dart';
 import 'package:countdown_days_flutter_app/screens/event_list_screen.dart';
+import 'package:countdown_days_flutter_app/services/background_service.dart';
 import 'package:countdown_days_flutter_app/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +41,11 @@ class _MyAppState extends State<MyApp> {
 
     // Check if app was opened from a notification
     _checkForInitialNotificationAction();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   // Check for initial notification action

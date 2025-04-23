@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/event_data.dart';
 import '../models/event_model.dart';
+import '../services/background_service.dart';
 import 'event_form_screen.dart';
 
 class EventListScreen extends StatefulWidget {
@@ -16,13 +17,21 @@ class EventListScreen extends StatefulWidget {
 
 class _EventListScreenState extends State<EventListScreen> {
   Timer? _countdownTimer;
+  final BackgroundService _backgroundService = BackgroundService();
 
   @override
   void initState() {
     super.initState();
     // Load events when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<EventData>().loadEvents();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final eventData = context.read<EventData>();
+      await eventData.loadEvents();
+
+      // Check for repeating events that need updating
+      await eventData.updateRepeatingEvents();
+
+      // Initialize background service with valid EventData provider
+      _backgroundService.initialize(eventData);
     });
 
     // Start the countdown timer that updates every second
@@ -30,11 +39,23 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   void _startCountdownTimer() {
-    // Update every minute to refresh countdown displays
+    // Update every second to refresh countdown displays
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          // This will rebuild the UI with updated countdown values
+          // Check if any repeating events need updating
+          final now = DateTime.now();
+          final eventData = Provider.of<EventData>(context, listen: false);
+
+          bool needsUpdate = eventData.events.any((event) =>
+          event.isRepeating &&
+              event.repeatConfig != null &&
+              event.endDate.isBefore(now));
+
+          if (needsUpdate) {
+            // Don't await - just trigger the update
+            eventData.updateRepeatingEvents();
+          }
         });
       }
     });
@@ -43,6 +64,7 @@ class _EventListScreenState extends State<EventListScreen> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    _backgroundService.dispose();
     super.dispose();
   }
 
