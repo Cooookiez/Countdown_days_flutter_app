@@ -1,4 +1,4 @@
-package pl.cookiez.countdown.countdown_days_flutter_app
+package pl.cookiez.countdown_master
 
 import io.flutter.embedding.android.FlutterActivity
 
