@@ -191,15 +191,48 @@ class _EventListScreenState extends State<EventListScreen> {
 
   Widget _buildEventCard(Event event) {
     final bool isRepeating = event.isRepeating && event.repeatConfig != null;
+    final bool hasNotifications = event.allowNotifications && event.notifications.isNotEmpty;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        title: Text(
-          event.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                event.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            if (hasNotifications)
+              Tooltip(
+                message: '${event.notifications.length} notification${event.notifications.length > 1 ? 's' : ''} set',
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.notifications_active, size: 16, color: Colors.indigo),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${event.notifications.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
