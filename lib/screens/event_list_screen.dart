@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/event_data.dart';
 import '../models/event_model.dart';
 import '../services/background_service.dart';
+import '../services/dev_mode_service.dart';
+import '../utils/dev_mode_utils.dart';
 import 'event_form_screen.dart';
 
 class EventListScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class EventListScreen extends StatefulWidget {
 class _EventListScreenState extends State<EventListScreen> {
   Timer? _countdownTimer;
   final BackgroundService _backgroundService = BackgroundService();
+  final DevModeService _devModeService = DevModeService();
 
   @override
   void initState() {
@@ -74,6 +78,15 @@ class _EventListScreenState extends State<EventListScreen> {
       appBar: AppBar(
         title: const Text('My Events'),
         actions: [
+          if (kDebugMode) // Only show in debug mode
+            IconButton(
+              icon: const Icon(Icons.developer_mode),
+              tooltip: 'Developer Options',
+              onPressed: () {
+                final eventData = context.read<EventData>();
+                DevModeUtils.showDevMenu(context, eventData);
+              },
+            ),
           PopupMenuButton<EventSortType>(
             icon: const Icon(Icons.sort),
             onSelected: (EventSortType sortType) {
@@ -111,8 +124,34 @@ class _EventListScreenState extends State<EventListScreen> {
       body: Consumer<EventData>(
         builder: (context, eventData, child) {
           if (eventData.events.isEmpty) {
-            return const Center(
-              child: Text('No events yet. Add your first event'),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('No events yet. Add your first event'),
+                  const SizedBox(height: 16),
+                  if (kDebugMode) // Only show in debug mode
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.add_chart),
+                          label: const Text('Add Demo Data'),
+                          onPressed: _addDemoData,
+                        ),
+                        const SizedBox(width: 16),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.developer_mode),
+                          label: const Text('Dev Menu'),
+                          onPressed: () {
+                            final eventData = context.read<EventData>();
+                            DevModeUtils.showDevMenu(context, eventData);
+                          },
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             );
           }
 
@@ -208,6 +247,36 @@ class _EventListScreenState extends State<EventListScreen> {
       if (mounted) {
         context.read<EventData>().deleteEvent(event.id);
       }
+    }
+  }
+
+  // Add demo data handler
+  Future<void> _addDemoData() async {
+    final eventData = context.read<EventData>();
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    // Add demo data
+    await _devModeService.addDemoData(eventData);
+
+    // Hide loading indicator
+    if (mounted) {
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Demo data added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 

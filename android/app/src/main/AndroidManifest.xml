@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="pl.cookiez.countdown_master">
     <application
         android:label="Countdown Master"
         android:name="${applicationName}"

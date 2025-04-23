@@ -40,8 +40,7 @@ class NotificationService {
       if (notifyTime.isBefore(DateTime.now())) continue;
 
       // Create a unique ID for this notification
-      final notificationId = int.parse(event.id.substring(0, 8), radix: 16) ^
-      int.parse(notification.id.substring(0, 8), radix: 16);
+      final notificationId = event.id.hashCode.abs() ^ notification.id.hashCode.abs();
 
       String timeDisplay = '${notification.amount} ${_formatUnit(notification.unit, notification.amount)}';
 
@@ -75,13 +74,17 @@ class NotificationService {
 
   /// Cancel all notifications for an event
   Future<void> cancelEventNotifications(String eventId) async {
-    // Generate a range of potential notification IDs for this event
-    final baseId = int.parse(eventId.substring(0, 8), radix: 16);
-    final ids = List.generate(100, (index) => baseId ^ index);
+    try {
+      // Use a hash code to generate a consistent numeric ID
+      final baseId = eventId.hashCode.abs();
+      final ids = List.generate(100, (index) => baseId ^ index);
 
-    // Cancel each potential notification
-    for (final id in ids) {
-      await AwesomeNotifications().cancel(id);
+      // Cancel each potential notification
+      for (final id in ids) {
+        await AwesomeNotifications().cancel(id);
+      }
+    } catch (e) {
+      print('Error canceling notifications for event $eventId: $e');
     }
   }
 
